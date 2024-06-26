@@ -72,7 +72,7 @@ classdef Markdown < handle
                 Obj.CloseFile();
             end
             
-            Obj.fileHandle = fopen(Obj.filePath, 'w+');
+            Obj.fileHandle = fopen(Obj.filePath, 'w+', 'n', 'UTF8');
         end
         
         function OpenFile(Obj)
@@ -552,6 +552,48 @@ classdef Markdown < handle
             markDown = Obj.ConvertMatrix(Matrix, FormatStr);
             Obj.ReplaceTag(Tag, sprintf('%s',markDown{:}));
         end
+        
+        function AddAudio(Obj, AudioFilePath)
+            narginchk(2,2);
+            assert(~isempty(Obj.fileHandle), 'Output file not created');
+            
+            % now we transform the file path to a relative path by
+            % stripping the path to the markdown file
+            [path,~] = fileparts(Obj.filePath);
+            ind = strfind(AudioFilePath, path);
+            if (ind > 0)
+                AudioFilePath(ind:ind + length(path)) = [];
+            end
+            audioStr = sprintf(Obj.layout.audio, AudioFilePath);
+            
+            fwrite(Obj.fileHandle, audioStr);
+            fwrite(Obj.fileHandle, sprintf('\n\n')); %#ok<SPRINTFN>
+        end
+        
+        function AddFigureGivenFile(Obj, ImageFilename, Description)  
+            narginchk(2,3);
+            assert(~isempty(Obj.fileHandle), 'File not created');
+          
+            if (nargin < 3)
+                Description = '';
+            end
+            
+            % now we transform the file path to a relative path by
+            % stripping the path to the markdown file
+            [path,~] = fileparts(Obj.filePath);
+            ind = strfind(ImageFilename, path);
+            if (ind > 0)
+                ImageFilename(ind:ind + length(path)) = [];
+            end
+            
+            imgStr = sprintf(Obj.layout.image, Description, ImageFilename);
+            
+            fwrite(Obj.fileHandle, imgStr);
+            
+            Obj.figureCount = Obj.figureCount + 1;
+        end  
+        
+        
         
         function BeginCode(Obj)
             assert(~isempty(Obj.fileHandle), 'Output file not created');
