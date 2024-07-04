@@ -143,24 +143,24 @@ classdef Markdown < handle
         end
         
         function [MarkDown] = ConvertFigure(Obj, Handle, Name, Description)
-            % apply custom layout to figure and axis
-            if (~isempty(Obj.layout.figure))
-                try
-                    Markdown.CopyProperties(Obj.layout.figure, Handle);
-                catch
-                    warning('Not all figure layout parameters could be copied');
-                end
-            end
-            if (~isempty(Obj.layout.axis))
-                axesHandles = find(contains(arrayfun(@class, Handle.Children, 'UniformOutput', false),'.Axes') == 1);
-                for iAxes = 1:length(axesHandles)
-                    try
-                        Markdown.CopyProperties(Obj.layout.axis, Handle.Children(axesHandles(iAxes)));
-                    catch
-                        warning('Not all axes layout parameters could be copied');
-                    end                    
-                end
-            end            
+%             % apply custom layout to figure and axis
+%             if (~isempty(Obj.layout.figure))
+%                 try
+%                     Markdown.CopyProperties(Obj.layout.figure, Handle);
+%                 catch
+%                     warning('Not all figure layout parameters could be copied');
+%                 end
+%             end
+%             if (~isempty(Obj.layout.axis))
+%                 axesHandles = find(contains(arrayfun(@class, Handle.Children, 'UniformOutput', false),'.Axes') == 1);
+%                 for iAxes = 1:length(axesHandles)
+%                     try
+%                         Markdown.CopyProperties(Obj.layout.axis, Handle.Children(axesHandles(iAxes)));
+%                     catch
+%                         warning('Not all axes layout parameters could be copied');
+%                     end                    
+%                 end
+%             end            
             
             % write file
             [~, markdownName, ~] = fileparts(Obj.filePath);
@@ -375,6 +375,13 @@ classdef Markdown < handle
             fwrite(Obj.fileHandle, sprintf('%s\n\n', Obj.ConvertText( varargin{:})));
         end
         
+        function AddEmptyLine(Obj)
+        % Adds Empty Line to the markdown file. 
+            assert(~isempty(Obj.fileHandle), 'Output file not created');
+                       
+            fwrite(Obj.fileHandle, sprintf('\n'));
+        end
+        
         function ReplaceText(Obj, Tag, varargin)
             assert(~isempty(Obj.fileHandle), 'Output file not created');
             
@@ -395,7 +402,7 @@ classdef Markdown < handle
                 Description = '';
             end
             
-            fwrite(Obj.fileHandle, sprintf('%s\n\n', Obj.ConvertFigure(Handle, Name, Description)));
+            fwrite(Obj.fileHandle, sprintf('%s', Obj.ConvertFigure(Handle, Name, Description)));
             
             Obj.figureCount = Obj.figureCount + 1;
         end   
@@ -553,8 +560,16 @@ classdef Markdown < handle
             Obj.ReplaceTag(Tag, sprintf('%s',markDown{:}));
         end
         
-        function AddAudio(Obj, AudioFilePath)
-            narginchk(2,2);
+        function AddAudio(Obj, AudioFilePath, type)
+            narginchk(2,3);
+            if nargin < 3
+                type = 'wav';
+            end
+            if strcmp(type, 'wav')
+                audio_layout = Obj.layout.audio_wav;
+            else
+                audio_layout = Obj.layout.audio_mp3;
+            end % of if strcmp(type, 'wav')
             assert(~isempty(Obj.fileHandle), 'Output file not created');
             
             % now we transform the file path to a relative path by
@@ -564,7 +579,7 @@ classdef Markdown < handle
             if (ind > 0)
                 AudioFilePath(ind:ind + length(path)) = [];
             end
-            audioStr = sprintf(Obj.layout.audio, AudioFilePath);
+            audioStr = sprintf(audio_layout, AudioFilePath);
             
             fwrite(Obj.fileHandle, audioStr);
             fwrite(Obj.fileHandle, sprintf('\n\n')); %#ok<SPRINTFN>

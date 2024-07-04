@@ -8,7 +8,8 @@ classdef MarkdownLayout < handle
         tableHeader = '---';
         blockQuote = '> ';
         horizontalLine = '---';
-        audio = '<audio controls=true src="%s"/>';
+        audio_wav = '<audio controls>\n<source src="%s"type="audio/wav">\n</audio>';
+        audio_mp3 = '<audio controls>\n<source src="%s"type="audio/mpeg">\n</audio>';
                 
         figure = [];
         axis = [];
